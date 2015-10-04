@@ -14,7 +14,7 @@ Var Debug
 
  This is a lighter and customizable alternative to native var\_dump with syntax highlighting in html mode and showing the file and line call of debug function by dint of backtrace.  ```php
 use Debug\Vars;
-
+```php
 //direct output
 Vars::debug($variable,$strlen=1000,$width=25,$depth=10); // text output
 Vars::debug_html($variable,$strlen=1000,$width=25,$depth=10); // html output
