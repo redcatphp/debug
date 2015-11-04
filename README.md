@@ -4,9 +4,9 @@
 Error Handler
 -------------
 
- A simple error handler for direct debugging purpose via html output and targeting source code context of errors. It handle all errors including fatal errors and exceptions. It will start automatically in surikat when your config set *dev.php* to true. `
+ A simple error handler for direct debugging purpose via html output and targeting source code context of errors. It handle all errors including fatal errors and exceptions. It will start automatically in RedCat when your config set *dev.php* to true. `
 ```php
-$errorHandler = new Wild\Debug\ErrorHandler;
+$errorHandler = new RedCat\Debug\ErrorHandler;
 $errorHandler->handle();
 ```
 Var Debug
