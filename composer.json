@@ -4,12 +4,12 @@
 	"description": "Debug - Common vars dump helpers and error handler for debugging purpose",
 	"keywords": ["Debug","Error Hanlder","var dump helpers","Dev"],
 	"license": ["LGPL-3.0+","CC0-1.0"],
-	"homepage": "https://github.com/redcatphp/Debug",
+	"homepage": "http://redcatphp.com/debug-php",
 	"authors": [
 		{
 			"name": "Jo Surikat",
 			"email": "jo@surikat.pro",
-			"homepage": "http://redcatphp.com/debug-php",
+			"homepage": "http://surikat.pro",
 			"role": "Developer"
 		}
 	],
