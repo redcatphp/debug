@@ -53,7 +53,7 @@ class ErrorHandler{
 			header("Content-Type: text/html; charset=utf-8");
 			$html = true;
 		}
-		$msg = 'Exception: '.htmlentities($e->getMessage());
+		$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
 		if($html){
 			echo $this->debugStyle;
 			echo '<pre class="error" style="'.$this->debugWrapInlineCSS.'"><span>'.$msg."</span>\nStackTrace:\n";
