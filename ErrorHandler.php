@@ -48,10 +48,9 @@ class ErrorHandler{
 		}
 	}
 	function catchException($e){
-		$html = false;
-		if(!headers_sent()&&$this->html_errors){
+		$html = isset($_SERVER['HTTP_ACCEPT'])&&strpos($_SERVER['HTTP_ACCEPT'],'text/html')!==false;
+		if(!headers_sent()&&$this->html_errors&&$html){
 			header("Content-Type: text/html; charset=utf-8");
-			$html = true;
 		}
 		$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
 		if($html){
