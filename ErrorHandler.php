@@ -45,6 +45,15 @@ class ErrorHandler{
 			set_exception_handler([$this,'catchException']);
 			if($this->loadFunctions)
 				include_once __DIR__.'/functions.inc.php';
+			
+			$errorDir = getcwd().'/.tmp/';
+			$errorFile = $errorDir.'php-error.log';
+			if(!is_dir($errorDir))
+				mkdir($errorDir,0777,true);
+			if(!is_file($errorFile))
+				file_put_contents($errorFile,'');
+			ini_set('log_errors', 1);
+			ini_set('error_log', $errorFile);
 		}
 	}
 	function catchException($e){
@@ -52,8 +61,10 @@ class ErrorHandler{
 		if(!headers_sent()&&$this->html_errors&&$html){
 			header("Content-Type: text/html; charset=utf-8");
 		}
-		$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
+		$msgStr = 'Exception: '.$e->getMessage().' in '.$e->getFile().' at line '.$e->getLine()."\n";
+		$msgStr .= $this->getExceptionTraceAsString($e);
 		if($html){
+			$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
 			echo $this->debugStyle;
 			echo '<pre class="error" style="'.$this->debugWrapInlineCSS.'"><span>'.$msg."</span>\nStackTrace:\n";
 			echo '#'.get_class($e);
@@ -66,9 +77,13 @@ class ErrorHandler{
 			echo '</pre>';
 		}
 		else{
-			echo strip_tags($msg);
+			echo $msgStr;
 		}
+		$this->errorLog($msgStr);
 		return false;
+	}
+	function errorLog($msg){
+		error_log($msg);
 	}
 	function getExceptionTraceAsString($exception) {
 		$rtn = "";
@@ -115,6 +130,7 @@ class ErrorHandler{
 			$html = true;
 		}
 		$msg = self::$errorType[$code]."\t$message\nFile\t$file\nLine\t$line";
+		$this->errorLog($msg);
 		if(is_file($file)){
 			if($html){
 				echo $this->debugStyle;
