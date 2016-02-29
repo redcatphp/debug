@@ -19,6 +19,7 @@ class ErrorHandler{
 	public $debugWrapInlineCSS;
 	public $html_errors;
 	public $loadFunctions;
+	public $cwd;
 	function __construct(
 		$html_errors=null,
 		$debugLines=5,
@@ -31,6 +32,7 @@ class ErrorHandler{
 		$this->debugStyle = $debugStyle;
 		$this->debugWrapInlineCSS = $debugWrapInlineCSS;
 		$this->loadFunctions = $loadFunctions;
+		$this->cwd = getcwd();
 	}
 	function handle($force=false){
 		$this->handle = true;
@@ -45,15 +47,6 @@ class ErrorHandler{
 			set_exception_handler([$this,'catchException']);
 			if($this->loadFunctions)
 				include_once __DIR__.'/functions.inc.php';
-			
-			$errorDir = getcwd().'/.tmp/';
-			$errorFile = $errorDir.'php-error.log';
-			if(!is_dir($errorDir))
-				mkdir($errorDir,0777,true);
-			if(!is_file($errorFile))
-				file_put_contents($errorFile,'');
-			ini_set('log_errors', 1);
-			ini_set('error_log', $errorFile);
 		}
 	}
 	function catchException($e){
@@ -61,7 +54,7 @@ class ErrorHandler{
 		if(!headers_sent()&&$this->html_errors&&$html){
 			header("Content-Type: text/html; charset=utf-8");
 		}
-		$msgStr = 'Exception: '.$e->getMessage().' in '.$e->getFile().' at line '.$e->getLine()."\n";
+		$msgStr = 'Exception: '.$e->getMessage().' in '.$e->getFile().' at line '.$e->getLine();
 		$msgStr .= $this->getExceptionTraceAsString($e);
 		if($html){
 			$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
@@ -77,13 +70,16 @@ class ErrorHandler{
 			echo '</pre>';
 		}
 		else{
-			echo $msgStr;
+			echo $msgStr."\n";
 		}
 		$this->errorLog($msgStr);
 		return false;
 	}
 	function errorLog($msg){
-		error_log($msg);
+		$errorDir = $this->cwd.'/.tmp/';
+		$errorFile = $errorDir.'php-error.log';
+		if(!is_dir($errorDir)) mkdir($errorDir,0777,true);
+		file_put_contents($errorFile,$msg.PHP_EOL,FILE_APPEND);
 	}
 	function getExceptionTraceAsString($exception) {
 		$rtn = "";
@@ -130,7 +126,7 @@ class ErrorHandler{
 			$html = true;
 		}
 		$msg = self::$errorType[$code]."\t$message\nFile\t$file\nLine\t$line";
-		$this->errorLog($msg);
+		$this->errorLog(self::$errorType[$code]."\t$message in $file at line $line");
 		if(is_file($file)){
 			if($html){
 				echo $this->debugStyle;
