@@ -97,7 +97,8 @@ abstract class Vars{
 							}
 							if($y)
 								$string.= '<br />'.$spaces;
-							$string.= "[$key] => ";
+							$keyStr = str_replace($search,$replace,$key);
+							$string.= "[$keyStr] => ";
 							$string.= self::debug_html_return($variable[$key],$strlen,$width,$depth,$i+1,$objects);
 							$count++;
 						}
@@ -130,6 +131,7 @@ abstract class Vars{
 								$name = '$'.substr($name,strlen($c)+1);
 							elseif(strpos($name,'*:')===0)
 								$name = '$'.substr($name,2);
+							$name = str_replace($search,$replace,$name);
 							$string.= "[$name] => ";
 							$string.= self::debug_html_return($value,$strlen,$width,$depth,$i+1,$objects);
 							$y++;
