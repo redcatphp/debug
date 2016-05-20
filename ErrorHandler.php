@@ -70,7 +70,7 @@ class ErrorHandler{
 			echo '</pre>';
 		}
 		else{
-			echo $msgStr."\n";
+			echo "\n".$msgStr."\n";
 		}
 		$this->errorLog($msgStr);
 		return false;
