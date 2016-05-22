@@ -88,56 +88,84 @@ class ErrorHandler{
 		$leftExclude=null;
 		$lefTrim=null;
 		if($this->devLevel<2){
-			$leftExclude = $this->cwd;
-			$lefTrim = $this->cwd;
+			$leftExclude = defined('REDCAT')?realpath(constant('REDCAT').'packages'):null;
+			$lefTrim = $this->cwd.'/';
 		}
 		return $this->getExceptionTraceAsString($exception,$leftExclude,$lefTrim);
 	}
-	function getExceptionTraceAsString($exception,$leftExclude=null,$lefTrim=null,$header=true){
-		$rtn = "\n";
-		$frames = $exception->getTrace();
-		$maxFilenameLength = 0;
-		foreach($frames as $i=>&$frame){
-			$frame['file_line'] = isset($frame['file'])?$frame['file'].':'.$frame['line']:'';
-			$maxFilenameLength = max($maxFilenameLength,strlen($frame['file_line']));
-		}
-		$frames = array_reverse($frames);
-		foreach($frames as $count=>$frame){
-			$args = '';
-			if(isset($frame['args'])){
-				$args = array();
-				foreach($frame['args'] as $arg){
-					if(is_string($arg))
-						$args[] = "'$arg'";
-					elseif(is_array($arg))
-						$args[] = "Array";
-					elseif(is_null($arg))
-						$args[] = 'NULL';
-					elseif(is_bool($arg))
-						$args[] = ($arg)?"true":"false";
-					elseif(is_object($arg))
-						$args[] = get_class($arg);
-					elseif(is_resource($arg))
-						$args[] = get_resource_type($arg);
-					else
-						$args[] = $arg;
-				}
-				$args = join(", ", $args);
+	static protected function getCallForFrame($frame){
+		return isset($frame['class'])?$frame['class'].$frame['type'].$frame['function']:$frame['function'];
+	}
+	static protected function getArgsForFrame($frame){
+		$args = '';
+		if(isset($frame['args'])){
+			$args = array();
+			foreach($frame['args'] as $arg){
+				if(is_string($arg))
+					$args[] = "'$arg'";
+				elseif(is_array($arg))
+					$args[] = "Array";
+				elseif(is_null($arg))
+					$args[] = 'NULL';
+				elseif(is_bool($arg))
+					$args[] = ($arg)?"true":"false";
+				elseif(is_object($arg))
+					$args[] = get_class($arg);
+				elseif(is_resource($arg))
+					$args[] = get_resource_type($arg);
+				else
+					$args[] = $arg;
 			}
-			$l = $maxFilenameLength-strlen($frame['file_line']);
-			$ws = $l?str_repeat(' ',$l):'';
-			$rtn .= sprintf("#%s	%s $ws	%s\n",
-				 $count+1,
-				 $frame['file_line'],
-				 isset($frame['class'])  ? $frame['class'].$frame['type'].$frame['function']:$frame['function'],
-				 $args
-			);
+			$args = join(", ", $args);
+		}
+		return $args;
+	}
+	function getExceptionTraceAsString($exception,$leftExclude=null,$leftTrim=null,$header=true){
+		$rtn = "\n";
+		$frames = [];
+		$maxFilenameLength = 0;
+		$lle = $leftExclude?strlen($leftExclude):null;
+		$llt = $leftTrim?strlen($leftTrim):null;
+		$framesTmp = $exception->getTrace();
+		$framesTmp = array_reverse($framesTmp);
+		foreach($framesTmp as $i=>$frame){
+			if(isset($frame['file'])){
+				if($leftExclude&&substr($frame['file'],0,$lle)==$leftExclude)
+					continue;
+				if($leftTrim&&substr($frame['file'],0,$llt)==$leftTrim)
+					$frame['file'] = substr($frame['file'],$llt);
+				
+				$frame['file_line'] = $frame['file'].':'.$frame['line'];
+				
+				$maxFilenameLength = max($maxFilenameLength,strlen($frame['file_line']));
+			}
+			else{
+				if(!isset($frames[$i-1])){
+					continue;
+				}
+				$frame['file_line'] = '';
+			}
+			$frames[$i] = $frame;
+		}
+		$step = 1;
+		$frames = array_values($frames);
+		for($i=0, $c = count($frames)-1; $i<$c; $i++){
+			$frame = $frames[$i];
+			$ws = str_repeat(' ',$maxFilenameLength-strlen($frame['file_line'])+4);
+			$call = self::getCallForFrame($frame).'('.self::getArgsForFrame($frame).')';
+			$ii = 1;
+			while(isset($frames[$i+$ii])&&empty($frames[$i+$ii]['file_line'])){
+				$call .= "\t >> \t".self::getCallForFrame($frames[$i+$ii]).'('.self::getArgsForFrame($frames[$i+$ii]).')';
+				$ii++;
+				$i++;
+			}
+			$rtn .= sprintf("#$step	{$frame['file_line']} $ws	{$call}\n");
+			$step ++;
 		}
 		
 		if($header){
 			$filenameLabel = 'FILE:LINE';
-			$l = $maxFilenameLength-strlen($filenameLabel);
-			$ws = $l?str_repeat(' ',$l):'';
+			$ws = str_repeat(' ',$maxFilenameLength-strlen($filenameLabel)+4);
 			$rtn = "\nSTEP	$filenameLabel $ws	CALL\n".$rtn;
 		}
 		return $rtn;
