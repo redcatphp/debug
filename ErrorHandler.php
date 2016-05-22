@@ -3,7 +3,7 @@
  * ErrorHandler - Error and Exception hanlder with syntax highlighting
  *
  * @package Debug
- * @version 1.4
+ * @version 1.5
  * @link http://github.com/redcatphp/Debug/
  * @author Jo Surikat <jo@surikat.pro>
  * @website http://redcatphp.com
