@@ -149,7 +149,7 @@ class ErrorHandler{
 		}
 		$step = 1;
 		$frames = array_values($frames);
-		for($i=0, $c = count($frames)-1; $i<$c; $i++){
+		for($i=0, $c = count($frames); $i<$c; $i++){
 			$frame = $frames[$i];
 			$ws = str_repeat(' ',$maxFilenameLength-strlen($frame['file_line'])+4);
 			$call = self::getCallForFrame($frame).'('.self::getArgsForFrame($frame).')';
@@ -159,7 +159,7 @@ class ErrorHandler{
 				$ii++;
 				$i++;
 			}
-			$rtn .= sprintf("#$step	{$frame['file_line']} $ws	{$call}\n");
+			$rtn .= "#$step	{$frame['file_line']} $ws	{$call}\n";
 			$step ++;
 		}
 		
