@@ -20,13 +20,16 @@ class ErrorHandler{
 	public $html_errors;
 	public $loadFunctions;
 	public $cwd;
+	public $devLevel;
 	function __construct(
+		$devLevel = 2,
 		$html_errors=null,
 		$debugLines=5,
 		$debugStyle='<style>code br{line-height:0.1em;}pre.error{display:block;position:relative;z-index:99999;}pre.error span:first-child{color:#d00;}</style>',
 		$debugWrapInlineCSS='margin:4px;padding:4px;border:solid 1px #ccc;border-radius:5px;overflow-x:auto;background-color:#fff;',
 		$loadFunctions=true
 	){
+		$this->devLevel = $devLevel;
 		$this->html_errors = isset($html_errors)?$html_errors:php_sapi_name()!='cli';
 		$this->debugLines = $debugLines;
 		$this->debugStyle = $debugStyle;
@@ -55,18 +58,18 @@ class ErrorHandler{
 			header("Content-Type: text/html; charset=utf-8");
 		}
 		$msgStr = 'Exception: '.$e->getMessage().' in '.$e->getFile().' at line '.$e->getLine();
-		$msgStr .= $this->getExceptionTraceAsString($e);
+		$msgStr .= $this->getExceptionTraceCustom($e);
 		if($html){
-			$msg = 'Exception: '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
+			$msg = get_class($e).': '.htmlentities($e->getMessage()).' in '.$e->getFile().' at line '.$e->getLine();
 			echo $this->debugStyle;
-			echo '<pre class="error" style="'.$this->debugWrapInlineCSS.'"><span>'.$msg."</span>\nStackTrace:\n";
-			echo '#'.get_class($e);
+			echo '<pre class="error" style="'.$this->debugWrapInlineCSS.'">'."\n<span>".$msg."</span>\n";
+			//echo ;
 			if(method_exists($e,'getData')){
 				echo ':';
 				var_dump($e->getData());
 			}
 			//echo htmlentities($e->getTraceAsString());
-			echo htmlentities($this->getExceptionTraceAsString($e));
+			echo htmlentities($this->getExceptionTraceCustom($e));
 			echo '</pre>';
 		}
 		else{
@@ -81,39 +84,61 @@ class ErrorHandler{
 		if(!is_dir($errorDir)) mkdir($errorDir,0777,true);
 		file_put_contents($errorFile,$msg.PHP_EOL,FILE_APPEND);
 	}
-	function getExceptionTraceAsString($exception) {
-		$rtn = "";
-		$count = 0;
-		foreach ($exception->getTrace() as $frame) {
-			$args = "";
-			if (isset($frame['args'])) {
+	function getExceptionTraceCustom($exception){
+		$leftExclude=null;
+		$lefTrim=null;
+		if($this->devLevel<2){
+			$leftExclude = $this->cwd;
+			$lefTrim = $this->cwd;
+		}
+		return $this->getExceptionTraceAsString($exception,$leftExclude,$lefTrim);
+	}
+	function getExceptionTraceAsString($exception,$leftExclude=null,$lefTrim=null,$header=true){
+		$rtn = "\n";
+		$frames = $exception->getTrace();
+		$maxFilenameLength = 0;
+		foreach($frames as $i=>&$frame){
+			$frame['file_line'] = isset($frame['file'])?$frame['file'].':'.$frame['line']:'';
+			$maxFilenameLength = max($maxFilenameLength,strlen($frame['file_line']));
+		}
+		$frames = array_reverse($frames);
+		foreach($frames as $count=>$frame){
+			$args = '';
+			if(isset($frame['args'])){
 				$args = array();
-				foreach ($frame['args'] as $arg) {
-					if (is_string($arg)) {
-						$args[] = "'" . $arg . "'";
-					} elseif (is_array($arg)) {
+				foreach($frame['args'] as $arg){
+					if(is_string($arg))
+						$args[] = "'$arg'";
+					elseif(is_array($arg))
 						$args[] = "Array";
-					} elseif (is_null($arg)) {
+					elseif(is_null($arg))
 						$args[] = 'NULL';
-					} elseif (is_bool($arg)) {
-						$args[] = ($arg) ? "true" : "false";
-					} elseif (is_object($arg)) {
+					elseif(is_bool($arg))
+						$args[] = ($arg)?"true":"false";
+					elseif(is_object($arg))
 						$args[] = get_class($arg);
-					} elseif (is_resource($arg)) {
+					elseif(is_resource($arg))
 						$args[] = get_resource_type($arg);
-					} else {
+					else
 						$args[] = $arg;
-					}   
-				}   
+				}
 				$args = join(", ", $args);
 			}
-			$rtn .= sprintf( "#%s %s(%s): %s(%s)\n",
-									 $count,
-									 isset($frame['file']) ? $frame['file'] : 'unknown file',
-									 isset($frame['line']) ? $frame['line'] : 'unknown line',
-									 (isset($frame['class']))  ? $frame['class'].$frame['type'].$frame['function'] : $frame['function'],
-									 $args );
-			$count++;
+			$l = $maxFilenameLength-strlen($frame['file_line']);
+			$ws = $l?str_repeat(' ',$l):'';
+			$rtn .= sprintf("#%s	%s $ws	%s\n",
+				 $count+1,
+				 $frame['file_line'],
+				 isset($frame['class'])  ? $frame['class'].$frame['type'].$frame['function']:$frame['function'],
+				 $args
+			);
+		}
+		
+		if($header){
+			$filenameLabel = 'FILE:LINE';
+			$l = $maxFilenameLength-strlen($filenameLabel);
+			$ws = $l?str_repeat(' ',$l):'';
+			$rtn = "\nSTEP	$filenameLabel $ws	CALL\n".$rtn;
 		}
 		return $rtn;
 	}
