@@ -151,7 +151,9 @@ class ErrorHandler{
 		$frames = array_values($frames);
 		for($i=0, $c = count($frames); $i<$c; $i++){
 			$frame = $frames[$i];
-			$ws = str_repeat(' ',$maxFilenameLength-strlen($frame['file_line'])+4);
+			$wsl = $maxFilenameLength-strlen($frame['file_line'])+4;
+			if($wsl<0) $wsl = 0;
+			$ws = str_repeat(' ',$wsl);
 			$call = self::getCallForFrame($frame).'('.self::getArgsForFrame($frame).')';
 			$ii = 1;
 			while(isset($frames[$i+$ii])&&empty($frames[$i+$ii]['file_line'])){
@@ -165,7 +167,9 @@ class ErrorHandler{
 		
 		if($header){
 			$filenameLabel = 'FILE:LINE';
-			$ws = str_repeat(' ',$maxFilenameLength-strlen($filenameLabel)+4);
+			$wsl = $maxFilenameLength-strlen($filenameLabel)+4;
+			if($wsl<0) $wsl = 0;
+			$ws = str_repeat(' ',$wsl);
 			$rtn = "\nSTEP	$filenameLabel $ws	CALL\n".$rtn;
 		}
 		return $rtn;
