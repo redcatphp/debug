@@ -52,9 +52,13 @@ class ErrorHandler{
 				include_once __DIR__.'/functions.inc.php';
 		}
 	}
+	private function htmlError(){
+		return $this->html_errors&&(!isset($_SERVER['REQUEST_URI'])||pathinfo($_SERVER['REQUEST_URI'],PATHINFO_EXTENSION)!='json')&&(!isset($_SERVER['HTTP_ACCEPT'])||strpos($_SERVER['HTTP_ACCEPT'],'text/html')!==false);
+	}
 	function catchException($e){
-		$html = isset($_SERVER['HTTP_ACCEPT'])&&strpos($_SERVER['HTTP_ACCEPT'],'text/html')!==false;
-		if(!headers_sent()&&$this->html_errors&&$html){
+		$html = $this->htmlError();
+		http_response_code(520);
+		if(!headers_sent()&&$html){
 			header("Content-Type: text/html; charset=utf-8");
 		}
 		$msgStr = 'Exception: '.$e->getMessage().' in '.$e->getFile().' at line '.$e->getLine();
@@ -177,10 +181,10 @@ class ErrorHandler{
 	function errorHandle($code, $message, $file, $line){
 		if(!$this->handle||error_reporting()==0)
 			return;
-		$html = false;
-		if(!headers_sent()&&$this->html_errors){
+		$html = $this->htmlError();
+		http_response_code(520);
+		if(!headers_sent()&&$html){
 			header("Content-Type: text/html; charset=utf-8");
-			$html = true;
 		}
 		$msg = self::$errorType[$code]."\t$message\nFile\t$file\nLine\t$line";
 		$this->errorLog(self::$errorType[$code]."\t$message in $file at line $line");
