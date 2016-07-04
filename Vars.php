@@ -10,6 +10,9 @@
  */
 namespace RedCat\Debug;
 abstract class Vars{
+	static $maxStrLength = 10000;
+	static $maxValues = 100;
+	static $maxDepth = 10;
 	static function debugs(){
 		if(!headers_sent())
 			header('Content-Type: text/html; charset=utf-8');
@@ -32,19 +35,28 @@ abstract class Vars{
 		foreach(func_get_args() as $v)
 			echo self::debug_return($v),"\n";
 	}
-	static function debug_html($variable,$strlen=1000,$width=25,$depth=10){
+	static function debug_html($variable,$strlen=null,$width=null,$depth=null){
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		if(!headers_sent())
 			header('Content-Type: text/html; charset=utf-8');
 		echo self::debug_backtrace_html();
 		echo self::debug_html_return($variable,$strlen,$width,$depth);
 	}
-	static function debug_cli($variable,$strlen=1000,$width=25,$depth=10){
+	static function debug_cli($variable,$strlen=null,$width=null,$depth=null){
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		if(!headers_sent())
 			header('Content-Type: text/html; charset=utf-8');
 		echo self::debug_backtrace_cli();
 		echo self::debug_cli_return($variable,$strlen,$width,$depth);
 	}
-	static function debug_html_return($variable,$strlen=1000,$width=25,$depth=10,$i=0,&$objects = []){
+	static function debug_html_return($variable,$strlen=null,$width=null,$depth=null,$i=0,&$objects = []){
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		$search = ['&','<','>','"',"'"];
 		$replace = ['&#039;','&lt;','&gt;','&#34;','&#39;'];
 		$string = '';
@@ -155,7 +167,10 @@ abstract class Vars{
 		$string = '<div style="white-space:pre;border:1px solid #bbb;border-radius:4px;font-size:12px;line-height:1.4em;margin:3px;padding:4px;">' . $string . '</div>';
 		return $string;
 	}
-	static function debug_cli_return($variable,$strlen=1000,$width=25,$depth=10){
+	static function debug_cli_return($variable,$strlen=null,$width=null,$depth=null){
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		$string = self::debug_return($variable,$strlen,$width,$depth);
 		$maps = [
 			'countable' => '/(?P<type>array|int|string)\((?P<count>\d+)\)/',
@@ -166,13 +181,19 @@ abstract class Vars{
 			$string = preg_replace_callback($pattern, ['self', '_process'.ucfirst($function).'CLI'], $string);
 		return $string;
 	}
-	static function debug($variable,$strlen=1000,$width=25,$depth=10,$i=0,&$objects = []){
+	static function debug($variable,$strlen=null,$width=null,$depth=null,$i=0,&$objects = []){
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		if(!headers_sent())
 			header('Content-Type: text/plain; charset=utf-8');
 		echo self::debug_backtrace();
 		echo self::debug_return($variable,$strlen,$width,$depth,$i,$objects);
 	}
-	static function debug_return($variable,$strlen=1000,$width=25,$depth=10,$i=0,&$objects = []){
+	static function debug_return($variable,$strlen=null,$width=null,$depth=null,$i=0,&$objects = []){
+		if(!isset($width)) $width = static::$maxValues;
+		if(!isset($strlen)) $strlen = static::$maxStrLength;
+		if(!isset($depth)) $depth = static::$maxDepth;
 		$string = '';
 		switch(gettype($variable)){
 			case 'boolean':
