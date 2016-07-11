@@ -179,7 +179,7 @@ class ErrorHandler{
 		return $rtn;
 	}
 	function errorHandle($code, $message, $file, $line){
-		if(!$this->handle||error_reporting()==0)
+		if(!$this->handle||error_reporting()===0)
 			return;
 		$html = $this->htmlError();
 		http_response_code(520);
