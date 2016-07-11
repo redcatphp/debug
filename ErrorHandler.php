@@ -226,9 +226,9 @@ class ErrorHandler{
 				echo strip_tags($msg);
 			}
 		}
-		//else{
-			//echo "$message in $file on line $line";
-		//}
+		else{
+			echo "$message in $file on line $line";
+		}
 		return true;
 	}
 	function fatalErrorHandle(){
