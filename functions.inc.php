@@ -45,3 +45,27 @@ if(!function_exists('ddj')){
 		die;
 	}
 }
+if(!function_exists('dk')){
+	function dk(){
+		$args = func_get_args();
+		foreach($args as &$arg){
+			if(is_array($arg)){
+				$arg = array_keys($arg);
+			}
+			else if(is_object($arg)){
+				$tmp = [];
+				foreach($arg as $k=>$v){
+					$tmp[] = $k;
+				}
+				$arg = $tmp;
+			}
+		}
+		return call_user_func_array(['RedCat\Debug\Vars',php_sapi_name()=='cli'?'debugsCLI':'debugs'],$args);
+	}
+}
+if(!function_exists('ddk')){
+	function ddk(){
+		call_user_func_array('dk',func_get_args());
+		die;
+	}
+}
