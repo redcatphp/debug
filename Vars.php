@@ -18,22 +18,27 @@ abstract class Vars{
 			header('Content-Type: text/html; charset=utf-8');
 		echo self::debug_backtrace_html();
 		foreach(func_get_args() as $v){
-			echo self::debug_html_return($v);
+			$maxstrlen = is_string($v)?false:null;
+			echo self::debug_html_return($v,$maxstrlen);
 		}
 	}
 	static function debugsCLI(){
 		if(!headers_sent())
 			header('Content-Type: text/plain; charset=utf-8');
 		echo self::debug_backtrace_cli(),"\n";
-		foreach(func_get_args() as $v)
-			echo self::debug_cli_return($v),"\n";
+		foreach(func_get_args() as $v){
+			$maxstrlen = is_string($v)?false:null;
+			echo self::debug_cli_return($v,$maxstrlen),"\n";
+		}
 	}
 	static function dbugs(){
 		if(!headers_sent())
 			header('Content-Type: text/plain; charset=utf-8');
 		echo self::debug_backtrace();
-		foreach(func_get_args() as $v)
-			echo self::debug_return($v),"\n";
+		foreach(func_get_args() as $v){
+			$maxstrlen = is_string($v)?false:null;
+			echo self::debug_return($v,$maxstrlen),"\n";
+		}
 	}
 	static function debug_html($variable,$strlen=null,$width=null,$depth=null){
 		if(!isset($strlen)) $strlen = static::$maxStrLength;
