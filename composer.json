@@ -18,7 +18,8 @@
 	},
 	"autoload": {
 		"psr-4":{
-			"RedCat\\Debug\\": ""
+			"RedCat\\Debug\\": "",
+			"files": [ "functions.inc.php" ]
 		}
 	},
 	"minimum-stability": "dev"
