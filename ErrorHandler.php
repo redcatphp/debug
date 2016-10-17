@@ -55,6 +55,24 @@ class ErrorHandler{
 	private function htmlError(){
 		return $this->html_errors&&(!isset($_SERVER['REQUEST_URI'])||pathinfo($_SERVER['REQUEST_URI'],PATHINFO_EXTENSION)!='json')&&(!isset($_SERVER['HTTP_ACCEPT'])||strpos($_SERVER['HTTP_ACCEPT'],'text/html')!==false);
 	}
+	function printTrace($html=true){
+		$html = $this->htmlError();
+		if(!headers_sent()&&$html){
+			header("Content-Type: text/html; charset=utf-8");
+		}
+		$e = new \Exception();
+		$msgStr = $this->getExceptionTraceCustom($e);
+		if($html){
+			$msg = '';
+			echo $this->debugStyle;
+			echo '<pre class="error" style="'.$this->debugWrapInlineCSS.'">'."\n";
+			echo htmlentities($this->getExceptionTraceCustom($e,3));
+			echo '</pre>';
+		}
+		else{
+			echo "\n".$msgStr."\n";
+		}
+	}
 	function catchException($e){
 		$html = $this->htmlError();
 		http_response_code(520);
@@ -88,14 +106,14 @@ class ErrorHandler{
 		if(!is_dir($errorDir)) mkdir($errorDir,0777,true);
 		file_put_contents($errorFile,$msg.PHP_EOL,FILE_APPEND);
 	}
-	function getExceptionTraceCustom($exception){
+	function getExceptionTraceCustom($exception,$removeEnd=false){
 		$leftExclude=null;
 		$lefTrim=null;
 		if($this->devLevel<2){
 			$leftExclude = defined('REDCAT')?realpath(constant('REDCAT').'packages'):null;
 			$lefTrim = $this->cwd.'/';
 		}
-		return $this->getExceptionTraceAsString($exception,$leftExclude,$lefTrim);
+		return $this->getExceptionTraceAsString($exception,$leftExclude,$lefTrim,true,$removeEnd);
 	}
 	static protected function getCallForFrame($frame){
 		return isset($frame['class'])?$frame['class'].$frame['type'].$frame['function']:$frame['function'];
@@ -124,13 +142,16 @@ class ErrorHandler{
 		}
 		return $args;
 	}
-	function getExceptionTraceAsString($exception,$leftExclude=null,$leftTrim=null,$header=true){
+	function getExceptionTraceAsString($exception,$leftExclude=null,$leftTrim=null,$header=true,$removeEnd=false){
 		$rtn = "\n";
 		$frames = [];
 		$maxFilenameLength = 0;
 		$lle = $leftExclude?strlen($leftExclude):null;
 		$llt = $leftTrim?strlen($leftTrim):null;
 		$framesTmp = $exception->getTrace();
+		if($removeEnd){
+			array_splice($framesTmp,0,$removeEnd);
+		}
 		$framesTmp = array_reverse($framesTmp);
 		foreach($framesTmp as $i=>$frame){
 			if(isset($frame['file'])){
